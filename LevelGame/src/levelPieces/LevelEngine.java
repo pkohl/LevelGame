@@ -27,6 +27,11 @@ public class LevelEngine {
 		
 		Porcupine pokey =  new Porcupine('^', 2);
 		pieces[2] = pokey;
+		interactingPieces.add(pokey);
+		
+		Streaker streakey = new Streaker('S', 1);
+		pieces[1] = streakey;
+		movingPieces.add(streakey);
 		
 		playerStartLoc = 10;
 	
@@ -58,7 +63,7 @@ public class LevelEngine {
 	}
 	
 	// get all the pieces capable of interaction
-	public ArrayList<GamePiece> getInteractingPieces(){
+	public ArrayList<GamePiece> getInteractingPieces(){		
 		return interactingPieces;
 	}
 	
