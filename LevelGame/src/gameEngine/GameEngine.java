@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import levelPieces.GamePiece;
 import levelPieces.LevelEngine;
+import levelPieces.TippedCow;
 
 /**
  * Framework for LevelGame. 
@@ -26,7 +27,7 @@ public class GameEngine {
 	 * GameEngine will automatically play each level, starting with 1
 	 * through the number specified here. 
 	 */
-	public final static int NUM_LEVELS = 2;
+	public final static int NUM_LEVELS = 3;
 	// Keep track of the current level, starting with level 1
 	private int currentLevel;
 	// LevelEngine will create all the data structures for this level
@@ -69,6 +70,9 @@ public class GameEngine {
 	 * All other objects must be Drawable, so that the draw method can be used.
 	 */
 	public void displayBoard() {
+		if (currentLevel == NUM_LEVELS){
+			System.out.println("Secret cow level!");
+		}
 		for (int i=0; i<pieces.length; i++) {
 			// Ensure player is always drawn
 			if (i == player.getLocation()) 
@@ -102,7 +106,11 @@ public class GameEngine {
 	 * result is InteractionResult.KILL). 
 	 */
 	public void interaction() {
-		for (GamePiece piece : interactingPieces) {
+		ArrayList<GamePiece> tempInteractingPieces = new ArrayList<GamePiece>();
+		tempInteractingPieces = interactingPieces;
+
+
+		for (GamePiece piece : tempInteractingPieces) {
 			InteractionResult result = piece.interact(pieces, player.getLocation());		
 			if (result == InteractionResult.GET_POINT) {
 				player.addPoint(); 
@@ -129,6 +137,25 @@ public class GameEngine {
 				// can only advance once
 				break;
 			}
+			// if a piece gets tipped over, remove it and replace it with the tipped version
+			// (currently only supports tipped cows)
+			if (result == InteractionResult.TIP) {
+				
+				// remove piece
+				int currentLoc = piece.getLocation();
+				pieces[currentLoc] = null;
+				interactingPieces.remove(piece);
+				if (piece instanceof Moveable) movingPieces.remove(piece);
+				
+				
+				// add tipped piece in same location;
+				piece = new TippedCow('#', currentLoc);
+				pieces[currentLoc] = piece;
+				interactingPieces.add(piece);				
+				System.out.println("\nYou tipped over a cow!  It looks angry.\n");
+				break;
+			}
+			
 		}			
 	}
 	
@@ -137,6 +164,8 @@ public class GameEngine {
 	 * Will be complete if player is advancing (either by interaction 
 	 * with a game piece or accumulating points) or dead (either by 
 	 * interaction with a game piece or accumulating too many hits).
+	 * Has a special check for the secret cow level - player must tip
+	 * over all cows to advance.
 	 * 
 	 * @return true if player advances or was killed, false otherwise
 	 */
@@ -148,6 +177,18 @@ public class GameEngine {
 		}
 		if (player.isDead()) {
 			return true;
+		}
+		// if this is the secret cow level, check to see if the player has
+		// tipped over all the cows
+		if (currentLevel == NUM_LEVELS){
+			Boolean noCowsRemain = true;
+			for (GamePiece piece : interactingPieces){
+				if (piece instanceof levelPieces.Cow){
+					 noCowsRemain = false;
+				}
+			}
+			return noCowsRemain;
+			
 		}
 		return false;	
 	}
